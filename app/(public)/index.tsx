@@ -1,6 +1,8 @@
 import { Colors } from "@/constants/Colors";
+import { api } from "@/convex/_generated/api";
 import { useOAuth } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "convex/react";
 import {
   Image,
   ScrollView,
@@ -11,9 +13,39 @@ import {
 } from "react-native";
 
 export default function LoginScreen() {
-  // const { startOAuthFlow: startFacebookAuthFlow } = useOAuth({
-  //   strategy: "oauth_facebook",
-  // });
+  const { startOAuthFlow } = useOAuth({
+    strategy: "oauth_google",
+  });
+  const { startOAuthFlow: startInstagramAuthFlow } = useOAuth({
+    strategy: "oauth_facebook",
+  });
+
+  const data = useQuery(api.users.getAllUsers);
+
+  console.log("~Index ~ data : ", data);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { createdSessionId, setActive } = await startOAuthFlow();
+      if (createdSessionId) {
+        setActive!({ session: createdSessionId });
+      }
+    } catch (error) {
+      console.error("Google OAuth Error:", error);
+    }
+  };
+
+  const handleInstagramLogin = async () => {
+    try {
+      const { createdSessionId, setActive } = await startInstagramAuthFlow();
+      if (createdSessionId) {
+        setActive!({ session: createdSessionId });
+      }
+    } catch (error) {
+      console.error("Instagram OAuth Error:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -24,7 +56,10 @@ export default function LoginScreen() {
         <Text style={styles.title}>How would you like to use Threads?</Text>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.loginButtonContainer}>
+          <TouchableOpacity
+            style={styles.loginButtonContainer}
+            onPress={handleInstagramLogin}
+          >
             <View style={styles.loginButtonContent}>
               <Image
                 source={require("@/assets/images/instagram.webp")}
@@ -46,7 +81,11 @@ export default function LoginScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.loginButtonContainer}>
+          {/* Google login */}
+          <TouchableOpacity
+            style={styles.loginButtonContainer}
+            onPress={handleGoogleLogin}
+          >
             <View style={styles.loginButtonContent}>
               <Image
                 source={require("@/assets/images/google.png")}
@@ -62,6 +101,28 @@ export default function LoginScreen() {
             <Text style={styles.loginButtonSubtitle}>
               Log in or create a THreads profile with your Google account.
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.loginButtonContainer}>
+            <View style={styles.loginButtonContent}>
+              <Image
+                source={require("@/assets/images/threads.png")}
+                style={styles.google}
+              />
+              <Text style={styles.loginButtonText}>Use without a profile</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={Colors.border}
+              />
+            </View>
+            <Text style={styles.loginButtonSubtitle}>
+              Continue without logging in or creating a profile.
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Text style={styles.switchAccount}>Switch accounts</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -119,5 +180,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     color: "#acacac",
+  },
+  switchAccount: {
+    fontSize: 14,
+    color: Colors.border,
+    alignSelf: "center",
   },
 });
